@@ -3,6 +3,10 @@ package com.books.exchange.services.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +15,7 @@ import com.books.exchange.entities.Books.BookStatus;
 import com.books.exchange.entities.User;
 import com.books.exchange.exceptions.ResourceNotFoundException;
 import com.books.exchange.payloads.BooksDto;
+import com.books.exchange.payloads.PageResponse;
 import com.books.exchange.repositories.BooksRepo;
 import com.books.exchange.repositories.UserRepo;
 import com.books.exchange.services.BooksService;
@@ -133,6 +138,74 @@ public class BookServiceImpl implements BooksService {
                 .orElseThrow(() -> new ResourceNotFoundException("Book", "id", bookId));
         book.setStatus(status);
         return mapToDto(booksRepo.save(book));
+    }
+
+    // Paginated methods
+    @Override
+    public PageResponse<BooksDto> getAllBooks(int pageNumber, int pageSize, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<Books> page = booksRepo.findAll(pageable);
+        return mapToPageResponse(page);
+    }
+
+    @Override
+    public PageResponse<BooksDto> getAvailableBooks(int pageNumber, int pageSize, String sortBy, String sortDir) {
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        Page<Books> page = booksRepo.findByStatus(BookStatus.AVAILABLE, pageable);
+        return mapToPageResponse(page);
+    }
+
+    @Override
+    public PageResponse<BooksDto> getBooksByUser(int userId, int pageNumber, int pageSize) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+        Page<Books> page = booksRepo.findByUsers(user, pageable);
+        return mapToPageResponse(page);
+    }
+
+    @Override
+    public PageResponse<BooksDto> searchBooks(String query, int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+        Page<Books> page = booksRepo.searchBooks(query, pageable);
+        return mapToPageResponse(page);
+    }
+
+    @Override
+    public PageResponse<BooksDto> searchAvailableBooks(String query, int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+        Page<Books> page = booksRepo.searchAvailableBooks(query, BookStatus.AVAILABLE, pageable);
+        return mapToPageResponse(page);
+    }
+
+    @Override
+    public PageResponse<BooksDto> getBooksByGenre(String genre, int pageNumber, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+        Page<Books> page = booksRepo.findByGenre(genre, pageable);
+        return mapToPageResponse(page);
+    }
+
+    private PageResponse<BooksDto> mapToPageResponse(Page<Books> page) {
+        List<BooksDto> content = page.getContent().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+
+        return PageResponse.<BooksDto>builder()
+                .content(content)
+                .pageNumber(page.getNumber())
+                .pageSize(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .empty(page.isEmpty())
+                .build();
     }
 
     private BooksDto mapToDto(Books book) {

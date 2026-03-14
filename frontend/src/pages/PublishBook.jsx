@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { bookService } from '../services/api';
 import Toast from '../components/Toast';
-import { BookOpen, User, Calendar, Hash, Tag, FileText, Loader2 } from 'lucide-react';
+import ImageUpload from '../components/ImageUpload';
+import { BookOpen, User, Calendar, Hash, Loader2 } from 'lucide-react';
 
 const genres = ['Fiction', 'Non-Fiction', 'Science', 'Technology', 'History', 'Biography', 'Fantasy', 'Mystery', 'Romance', 'Self-Help', 'Education', 'Other'];
 const conditions = ['New', 'Like New', 'Good', 'Fair', 'Acceptable'];
@@ -13,8 +15,9 @@ export default function PublishBook() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const [coverImage, setCoverImage] = useState(null);
   const [formData, setFormData] = useState({
-    bookTitle: '', author: '', year: '', edition: 1, isbn: '', genre: '', condition: 'Good', description: '',
+    bookTitle: '', author: '', year: '', edition: 1, isbn: '', genre: '', bookCondition: 'Good', description: '',
   });
 
   const handleChange = (e) => {
@@ -29,6 +32,7 @@ export default function PublishBook() {
     try {
       await bookService.publishBook({
         ...formData,
+        photos: coverImage,
         year: parseInt(formData.year),
         edition: parseInt(formData.edition),
       }, user.id);
@@ -49,41 +53,55 @@ export default function PublishBook() {
       </div>
 
       <form onSubmit={handleSubmit} className="glass-card-solid p-8 space-y-6">
-        {/* Title & Author */}
-        <div className="grid sm:grid-cols-2 gap-4">
+        {/* Cover Image & Basic Info */}
+        <div className="grid sm:grid-cols-[200px,1fr] gap-6">
+          {/* Book Cover Upload */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Book Title *</label>
-            <div className="relative">
-              <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input type="text" name="bookTitle" value={formData.bookTitle} onChange={handleChange}
-                className="ios-input pl-12" placeholder="Enter book title" required />
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Book Cover</label>
+            <ImageUpload
+              onUpload={setCoverImage}
+              currentImage={coverImage}
+            />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Author *</label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input type="text" name="author" value={formData.author} onChange={handleChange}
-                className="ios-input pl-12" placeholder="Author name" required />
+
+          {/* Title, Author, Year, Edition */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Book Title *</label>
+              <div className="relative">
+                <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input type="text" name="bookTitle" value={formData.bookTitle} onChange={handleChange}
+                  className="ios-input pl-12" placeholder="Enter book title" required />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Author *</label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input type="text" name="author" value={formData.author} onChange={handleChange}
+                  className="ios-input pl-12" placeholder="Author name" required />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Year *</label>
+                <div className="relative">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input type="number" name="year" value={formData.year} onChange={handleChange}
+                    className="ios-input pl-12" placeholder="2024" min="1800" max="2030" required />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Edition</label>
+                <input type="number" name="edition" value={formData.edition} onChange={handleChange}
+                  className="ios-input" min="1" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Year & Edition */}
+        {/* ISBN, Genre & Condition */}
         <div className="grid sm:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Year *</label>
-            <div className="relative">
-              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input type="number" name="year" value={formData.year} onChange={handleChange}
-                className="ios-input pl-12" placeholder="2024" min="1800" max="2030" required />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Edition</label>
-            <input type="number" name="edition" value={formData.edition} onChange={handleChange}
-              className="ios-input" min="1" />
-          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">ISBN</label>
             <div className="relative">
@@ -92,10 +110,6 @@ export default function PublishBook() {
                 className="ios-input pl-12" placeholder="Optional" />
             </div>
           </div>
-        </div>
-
-        {/* Genre & Condition */}
-        <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Genre</label>
             <select name="genre" value={formData.genre} onChange={handleChange} className="ios-input">
@@ -105,7 +119,7 @@ export default function PublishBook() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
-            <select name="condition" value={formData.condition} onChange={handleChange} className="ios-input">
+            <select name="bookCondition" value={formData.bookCondition} onChange={handleChange} className="ios-input">
               {conditions.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>

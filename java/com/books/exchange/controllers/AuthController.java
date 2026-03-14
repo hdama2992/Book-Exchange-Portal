@@ -4,9 +4,15 @@ import com.books.exchange.entities.User;
 import com.books.exchange.exceptions.UserAlreadyExistsException;
 import com.books.exchange.payloads.AuthRequest;
 import com.books.exchange.payloads.AuthResponse;
+import com.books.exchange.payloads.NewPasswordRequest;
+import com.books.exchange.payloads.PasswordResetRequest;
 import com.books.exchange.payloads.RegisterRequest;
 import com.books.exchange.repositories.UserRepo;
 import com.books.exchange.security.JwtService;
+import com.books.exchange.services.EmailService;
+import com.books.exchange.services.PasswordResetService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,12 +24,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:3000"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175"})
+@Tag(name = "Authentication", description = "Auth and password reset APIs")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -31,6 +39,8 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final PasswordResetService passwordResetService;
+    private final EmailService emailService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -96,6 +106,40 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(AuthResponse.error("Invalid token"));
         }
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset email")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody PasswordResetRequest request) {
+        try {
+            passwordResetService.requestPasswordReset(request.getEmail());
+            return ResponseEntity.ok(Map.of(
+                "message", "If an account exists with this email, you will receive a password reset link"
+            ));
+        } catch (Exception e) {
+            // Don't reveal whether email exists
+            return ResponseEntity.ok(Map.of(
+                "message", "If an account exists with this email, you will receive a password reset link"
+            ));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password with token")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody NewPasswordRequest request) {
+        try {
+            passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+            return ResponseEntity.ok(Map.of("message", "Password reset successful"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/validate-reset-token")
+    @Operation(summary = "Validate password reset token")
+    public ResponseEntity<Map<String, Boolean>> validateResetToken(@RequestParam String token) {
+        boolean isValid = passwordResetService.validateToken(token);
+        return ResponseEntity.ok(Map.of("valid", isValid));
     }
 }
 

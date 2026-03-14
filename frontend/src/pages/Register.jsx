@@ -1,55 +1,45 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '../context/AuthContext';
+import { registerSchema } from '../lib/validations';
 import { BookOpen, Mail, Lock, User, Phone, MapPin, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function Register() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    contactNo: '',
-    address: '',
-  });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const [serverError, setServerError] = useState('');
+  const { register: registerUser } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      contactNo: '',
+      address: '',
+    },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    setLoading(true);
-
+  const onSubmit = async (data) => {
+    setServerError('');
     try {
-      await register({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        contactNo: formData.contactNo,
-        address: formData.address,
+      await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+        contactNo: data.contactNo || undefined,
+        address: data.address || undefined,
       });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
+      setServerError(err.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -69,61 +59,71 @@ export default function Register() {
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Create account</h1>
           <p className="text-gray-500 mb-6">Join our community of book lovers</p>
 
-          {error && (
+          {serverError && (
             <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm">
-              {error}
+              {serverError}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="text" name="name" value={formData.name} onChange={handleChange}
-                  className="ios-input pl-12" placeholder="Full Name" required />
+                <input type="text" {...register('name')}
+                  className={`ios-input pl-12 ${errors.name ? 'border-red-400' : ''}`} placeholder="Full Name" />
               </div>
+              {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
             </div>
 
             <div>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="email" name="email" value={formData.email} onChange={handleChange}
-                  className="ios-input pl-12" placeholder="Email Address" required />
+                <input type="email" {...register('email')}
+                  className={`ios-input pl-12 ${errors.email ? 'border-red-400' : ''}`} placeholder="Email Address" />
               </div>
+              {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="password" name="password" value={formData.password} onChange={handleChange}
-                  className="ios-input pl-12" placeholder="Password" required />
+              <div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input type="password" {...register('password')}
+                    className={`ios-input pl-12 ${errors.password ? 'border-red-400' : ''}`} placeholder="Password" />
+                </div>
+                {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>}
               </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange}
-                  className="ios-input pl-12" placeholder="Confirm" required />
+              <div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input type="password" {...register('confirmPassword')}
+                    className={`ios-input pl-12 ${errors.confirmPassword ? 'border-red-400' : ''}`} placeholder="Confirm" />
+                </div>
+                {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword.message}</p>}
               </div>
             </div>
 
             <div>
               <div className="relative">
                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="tel" name="contactNo" value={formData.contactNo} onChange={handleChange}
-                  className="ios-input pl-12" placeholder="Phone Number (optional)" />
+                <input type="tel" {...register('contactNo')}
+                  className={`ios-input pl-12 ${errors.contactNo ? 'border-red-400' : ''}`} placeholder="Phone Number (optional)" />
               </div>
+              {errors.contactNo && <p className="mt-1 text-sm text-red-500">{errors.contactNo.message}</p>}
             </div>
 
             <div>
               <div className="relative">
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="text" name="address" value={formData.address} onChange={handleChange}
-                  className="ios-input pl-12" placeholder="Address (optional)" />
+                <input type="text" {...register('address')}
+                  className={`ios-input pl-12 ${errors.address ? 'border-red-400' : ''}`} placeholder="Address (optional)" />
               </div>
+              {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address.message}</p>}
             </div>
 
-            <button type="submit" disabled={loading}
+            <button type="submit" disabled={isSubmitting}
               className="w-full ios-button-primary flex items-center justify-center gap-2 mt-6">
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (
                 <>Create Account<ArrowRight className="w-5 h-5" /></>
               )}
             </button>

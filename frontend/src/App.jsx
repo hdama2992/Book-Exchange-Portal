@@ -10,6 +10,7 @@ import MyBooks from './pages/MyBooks';
 import PublishBook from './pages/PublishBook';
 import Requests from './pages/Requests';
 import Profile from './pages/Profile';
+import NotFound from './pages/NotFound';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -101,6 +102,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* 404 Not Found */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
