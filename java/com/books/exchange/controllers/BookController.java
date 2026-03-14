@@ -1,6 +1,7 @@
 package com.books.exchange.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,17 +16,19 @@ import com.books.exchange.payloads.Apiresponse;
 import com.books.exchange.payloads.BooksDto;
 import com.books.exchange.payloads.PageResponse;
 import com.books.exchange.services.BooksService;
+import com.books.exchange.services.BookRecognitionService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:3000"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:3000"})
 @Tag(name = "Books", description = "Book management APIs")
 public class BookController {
 
     private final BooksService bookService;
+    private final BookRecognitionService bookRecognitionService;
 
     @PostMapping
     public ResponseEntity<BooksDto> publishBook(
@@ -153,5 +156,16 @@ public class BookController {
             @PathVariable int bookId,
             @RequestParam BookStatus status) {
         return ResponseEntity.ok(bookService.updateBookStatus(bookId, status));
+    }
+
+    @PostMapping("/recognize")
+    @Operation(summary = "Recognize book details from cover image using AI")
+    public ResponseEntity<Map<String, String>> recognizeBook(@RequestBody Map<String, String> request) {
+        String imageUrl = request.get("imageUrl");
+        if (imageUrl == null || imageUrl.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Image URL is required"));
+        }
+        Map<String, String> bookInfo = bookRecognitionService.recognizeBook(imageUrl);
+        return ResponseEntity.ok(bookInfo);
     }
 }

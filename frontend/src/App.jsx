@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import OAuthCallback from './pages/OAuthCallback';
 import Dashboard from './pages/Dashboard';
 import BrowseBooks from './pages/BrowseBooks';
 import MyBooks from './pages/MyBooks';
@@ -42,6 +43,7 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route
         path="/dashboard"
         element={

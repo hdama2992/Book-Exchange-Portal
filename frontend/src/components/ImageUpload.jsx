@@ -1,11 +1,12 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
-import api from '../services/api';
+import { Upload, X, Image as ImageIcon, Loader2, Sparkles } from 'lucide-react';
+import api, { bookService } from '../services/api';
 
-export default function ImageUpload({ onUpload, currentImage, className = '' }) {
+export default function ImageUpload({ onUpload, onRecognize, currentImage, className = '' }) {
   const [preview, setPreview] = useState(currentImage || null);
   const [uploading, setUploading] = useState(false);
+  const [recognizing, setRecognizing] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -40,7 +41,25 @@ export default function ImageUpload({ onUpload, currentImage, className = '' }) 
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      onUpload(response.data.fileUrl);
+      const fileUrl = response.data.fileUrl;
+      onUpload(fileUrl);
+
+      // Auto-recognize book if callback provided
+      if (onRecognize && fileUrl) {
+        setRecognizing(true);
+        try {
+          // Build full URL for OpenAI
+          const fullUrl = fileUrl.startsWith('http') ? fileUrl : `${window.location.origin}${fileUrl}`;
+          const bookInfo = await bookService.recognizeBook(fullUrl);
+          if (bookInfo && Object.keys(bookInfo).length > 0) {
+            onRecognize(bookInfo);
+          }
+        } catch (recognizeError) {
+          console.log('AI recognition not available:', recognizeError);
+        } finally {
+          setRecognizing(false);
+        }
+      }
     } catch (error) {
       console.error('Upload failed:', error);
       setPreview(null);
@@ -103,9 +122,16 @@ export default function ImageUpload({ onUpload, currentImage, className = '' }) 
             className="relative rounded-xl overflow-hidden aspect-[3/4] bg-gray-100"
           >
             <img src={preview} alt="Preview" className="w-full h-full object-cover" />
-            {uploading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-white animate-spin" />
+            {(uploading || recognizing) && (
+              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
+                {recognizing ? (
+                  <>
+                    <Sparkles className="w-8 h-8 text-yellow-400 animate-pulse" />
+                    <span className="text-white text-sm font-medium">AI analyzing cover...</span>
+                  </>
+                ) : (
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                )}
               </div>
             )}
             <button

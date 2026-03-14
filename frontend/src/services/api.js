@@ -79,6 +79,10 @@ export const bookService = {
     const response = await api.delete(`/books/${id}`);
     return response.data;
   },
+  recognizeBook: async (imageUrl) => {
+    const response = await api.post('/books/recognize', { imageUrl });
+    return response.data;
+  },
 };
 
 export const requestService = {

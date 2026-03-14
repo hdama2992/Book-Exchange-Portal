@@ -1,6 +1,7 @@
 package com.books.exchange.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,14 +33,26 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
+    // OAuth2 handler is optional - only injected if OAuth2 is configured
+    @Autowired(required = false)
+    private OAuth2AuthenticationSuccessHandler oAuth2SuccessHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/public/**", "/api/files/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
+                // Public endpoints - no auth required
+                .requestMatchers("/api/auth/**", "/api/public/**", "/api/files/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                // Books - read operations are public, write operations require auth
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/books/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/books/recognize").permitAll()
+                // Admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // Everything else requires authentication
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
@@ -47,6 +60,13 @@ public class SecurityConfig {
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Only enable OAuth2 if the handler is available (OAuth2 configured)
+        if (oAuth2SuccessHandler != null) {
+            http.oauth2Login(oauth2 -> oauth2
+                .successHandler(oAuth2SuccessHandler)
+            );
+        }
 
         return http.build();
     }

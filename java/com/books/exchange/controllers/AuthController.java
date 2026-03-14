@@ -14,6 +14,7 @@ import com.books.exchange.services.PasswordResetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -41,6 +43,12 @@ public class AuthController {
     private final UserDetailsService userDetailsService;
     private final PasswordResetService passwordResetService;
     private final EmailService emailService;
+
+    @Value("${spring.security.oauth2.client.registration.google.client-id:}")
+    private String googleClientId;
+
+    @Value("${spring.security.oauth2.client.registration.github.client-id:}")
+    private String githubClientId;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -140,6 +148,15 @@ public class AuthController {
     public ResponseEntity<Map<String, Boolean>> validateResetToken(@RequestParam String token) {
         boolean isValid = passwordResetService.validateToken(token);
         return ResponseEntity.ok(Map.of("valid", isValid));
+    }
+
+    @GetMapping("/oauth-providers")
+    @Operation(summary = "Get available OAuth providers")
+    public ResponseEntity<Map<String, Object>> getOAuthProviders() {
+        Map<String, Object> providers = new HashMap<>();
+        providers.put("google", googleClientId != null && !googleClientId.isEmpty());
+        providers.put("github", githubClientId != null && !githubClientId.isEmpty());
+        return ResponseEntity.ok(providers);
     }
 }
 

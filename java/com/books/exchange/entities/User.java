@@ -62,6 +62,9 @@ public class User {
 	@Column(nullable = false)
 	private boolean enabled = true;
 
+	@Column(name="oauth_provider", length = 20)
+	private String oauthProvider;
+
 	@Column(name="created_at")
 	private LocalDateTime createdAt;
 
