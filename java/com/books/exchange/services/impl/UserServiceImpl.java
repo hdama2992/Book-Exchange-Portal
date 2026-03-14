@@ -15,93 +15,65 @@ import com.books.exchange.services.UserService;
 
 @Service
 public class UserServiceImpl implements UserService {
-	@Autowired
-	private UserRepo userRepo;
-	
-	@Autowired
-	private  ModelMapper modelMapper;
-	@Override
-	public void createUser(UserDto userDto) {
-		User user = this.dtoToUser(userDto);
-		this.userRepo.save(user);
-	}
-    public UserDto userProfile(UserDto userDto) {
-    	User user = this.dtoToUser(userDto);
-    	this.userRepo.save(user);
-    	UserDto savedUser = this.userToDto(user);
-    	
-    	return savedUser;
+    @Autowired
+    private UserRepo userRepo;
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+    @Override
+    public void createUser(UserDto userDto) {
+        User user = this.dtoToUser(userDto);
+        this.userRepo.save(user);
     }
-	@Override
-	public UserDto updateUser(UserDto userDto, int userId) {
-		User user = this.userRepo.findById(userId).orElseThrow (()->new ResourceNotFoundException("User","id",userId));
-		user.setName(userDto.getName());
-		user.setEmail(userDto.getEmail());
-		user.setPassword(userDto.getPassword());
-		user.setAddress(userDto.getAddress());
-		user.setContact_no(userDto.getContact_no());	
-		User updatedUser = this.userRepo.save(user);
-		UserDto userDto1 = this.userToDto(updatedUser);
-		return userDto1;
-	}
-	@Override
-	public boolean checkIfUserExists(String email) {
-		
-		User user = userRepo.findByemail(email);
-		if(user!=null) {
-			return true;
-		}
-		else {
-			return false;
-		}
-		
-	}
-	
-	@Override
-	public UserDto getUserById(int userId) {
-        User user = this.userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("User","id",userId));
-		return this.userToDto(user);
-	}
-	public List<UserDto> getAllUsers() {
-		List <User> users = this.userRepo.findAll();
-        List <UserDto> userDtos = users.stream().map(user->this.userToDto(user)).collect(Collectors.toList());
-        
-	
-		return userDtos;
-	}
 
-	@Override
-	public void deleteUser(int userId) {
-		User user = this.userRepo.findById(userId).orElseThrow(()->new ResourceNotFoundException("User","Id",userId));
-		this.userRepo.delete(user);
+    public UserDto userProfile(UserDto userDto) {
+        User user = this.dtoToUser(userDto);
+        this.userRepo.save(user);
+        return this.userToDto(user);
+    }
 
-	}
-	
-	private User dtoToUser(UserDto userDto) {
-		User user = this.modelMapper.map(userDto,User.class);
-		//user.setId(userDto.getId());
-		//user.setFirstName(userDto.getFirstName());
-		//user.setLastName(userDto.getLastName());
-		//user.setEmail_id(userDto.getEmail_id());
-		//user.setPassword(userDto.getPassword());
-		//user.setWalletBalance(userDto.getWalletBalance());
-		
-		return user;
-		
-		
-		
-	}
-	public  UserDto userToDto(User user) {
-		UserDto userDto = this.modelMapper.map(user,UserDto.class);
-		//userDto.setId(user.getId());
-		//userDto.setFirstName(user.getFirstName());
-		//userDto.setLastName(user.getLastName());
-		//userDto.setEmail_id(user.getEmail_id());
-		//userDto.setPassword(user.getPassword());
-		//userDto.setWalletBalance(user.getWalletBalance());
-		
-		return userDto;
-		
-	}
+    @Override
+    public UserDto updateUser(UserDto userDto, int userId) {
+        User user = this.userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        user.setName(userDto.getName());
+        user.setEmail(userDto.getEmail());
+        user.setAddress(userDto.getAddress());
+        user.setContactNo(userDto.getContactNo());
+        User updatedUser = this.userRepo.save(user);
+        return this.userToDto(updatedUser);
+    }
 
+    @Override
+    public boolean checkIfUserExists(String email) {
+        return userRepo.findByEmail(email).isPresent();
+    }
+
+    @Override
+    public UserDto getUserById(int userId) {
+        User user = this.userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        return this.userToDto(user);
+    }
+
+    public List<UserDto> getAllUsers() {
+        List<User> users = this.userRepo.findAll();
+        return users.stream().map(this::userToDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteUser(int userId) {
+        User user = this.userRepo.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "Id", userId));
+        this.userRepo.delete(user);
+    }
+
+    private User dtoToUser(UserDto userDto) {
+        return this.modelMapper.map(userDto, User.class);
+    }
+
+    public UserDto userToDto(User user) {
+        return this.modelMapper.map(user, UserDto.class);
+    }
 }

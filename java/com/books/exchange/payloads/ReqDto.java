@@ -2,23 +2,31 @@ package com.books.exchange.payloads;
 
 import java.time.LocalDateTime;
 
-import lombok.Getter;
+import com.books.exchange.entities.Requests.RequestStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
-
 public class ReqDto {
-	
-	private int reqId;
-	private int Userid_1;
-	private int Userid_2;
-	private String bookTitle;
-	private LocalDateTime ExpReturnDate;
-	private LocalDateTime IssueDate;
 
-
+    private int reqId;
+    private int requesterId;
+    private String requesterName;
+    private int ownerId;
+    private String ownerName;
+    private int bookId;
+    private String bookTitle;
+    private String bookAuthor;
+    private RequestStatus status;
+    private LocalDateTime requestDate;
+    private LocalDateTime issueDate;
+    private LocalDateTime expectedReturnDate;
+    private LocalDateTime actualReturnDate;
+    private String message;
 }
 

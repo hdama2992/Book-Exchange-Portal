@@ -1,21 +1,32 @@
 package com.books.exchange.payloads;
 
-import lombok.Getter;
+import com.books.exchange.entities.Books.BookStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
 public class BooksDto {
-	
-	private int book_id;
-	private String Author;
-	private String bookTitle;
-	private int Edition;
-	private int Year;
-	private String Description;
-	
-	
 
+    private int bookId;
+    private String bookTitle;
+    private String author;
+    private int edition;
+    private int year;
+    private String description;
+    private String photos;
+    private String isbn;
+    private String genre;
+    private String bookCondition;
+    private BookStatus status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private int ownerId;
+    private String ownerName;
 }

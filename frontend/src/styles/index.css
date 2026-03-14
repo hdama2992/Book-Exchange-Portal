@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --gradient-start: #667eea;
+  --gradient-end: #764ba2;
+  --glass-bg: rgba(255, 255, 255, 0.25);
+  --glass-border: rgba(255, 255, 255, 0.35);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  min-height: 100vh;
+}
+
+@layer components {
+  /* Glassmorphism Card */
+  .glass-card {
+    @apply bg-white/20 backdrop-blur-xl rounded-2xl border border-white/30;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+  }
+
+  .glass-card-solid {
+    @apply bg-white/90 backdrop-blur-xl rounded-2xl;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  }
+
+  /* iOS-style Input */
+  .ios-input {
+    @apply w-full px-4 py-3.5 bg-white/80 backdrop-blur-sm rounded-xl border-0;
+    @apply text-gray-800 placeholder-gray-400;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-500/50;
+    @apply transition-all duration-200;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  .ios-input:focus {
+    @apply bg-white;
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* iOS-style Button */
+  .ios-button {
+    @apply px-6 py-3.5 font-semibold rounded-xl;
+    @apply transition-all duration-200 ease-out;
+    @apply active:scale-[0.98];
+  }
+
+  .ios-button-primary {
+    @apply ios-button bg-primary-500 text-white;
+    @apply hover:bg-primary-600;
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+  }
+
+  .ios-button-primary:hover {
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+  }
+
+  .ios-button-secondary {
+    @apply ios-button bg-white/80 backdrop-blur-sm text-gray-700;
+    @apply hover:bg-white;
+  }
+
+  .ios-button-ghost {
+    @apply ios-button bg-transparent text-white/90;
+    @apply hover:bg-white/10;
+  }
+
+  /* Navigation */
+  .nav-glass {
+    @apply bg-white/70 backdrop-blur-xl border-b border-white/30;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Status Badge */
+  .status-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+  }
+
+  .status-available {
+    @apply status-badge bg-emerald-100 text-emerald-700;
+  }
+
+  .status-borrowed {
+    @apply status-badge bg-amber-100 text-amber-700;
+  }
+
+  .status-pending {
+    @apply status-badge bg-blue-100 text-blue-700;
+  }
+
+  /* Book Card */
+  .book-card {
+    @apply glass-card-solid p-5 transition-all duration-300;
+    @apply hover:shadow-ios-lg hover:-translate-y-1;
+  }
+
+  /* Sidebar */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl;
+    @apply text-gray-600 font-medium;
+    @apply transition-all duration-200;
+    @apply hover:bg-gray-100;
+  }
+
+  .sidebar-link-active {
+    @apply sidebar-link bg-primary-50 text-primary-600;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Animations */
+.animate-in {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
